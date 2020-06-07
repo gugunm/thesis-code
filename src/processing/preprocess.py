@@ -50,6 +50,8 @@ Input     : wikipedia page yang udah di download
 Output    : Wikipedia page yang udah bersih dan siap di windowing
 '''
 def cleanWikiPages(wikiDir):
+    test = 1
+    print(test)
     # Looping untuk setiap folder
     # Baca setiap wikipedia pages
         # Lakukan cleaning file .txt seperti biasa
@@ -58,8 +60,8 @@ def cleanWikiPages(wikiDir):
         
     # Setelah ini selesai, masuk ke tahap windowing di file feature_lesk.py
         
-if __name__ == '__main__':
-    mainPreprocessing()
+#if __name__ == '__main__':
+#    mainPreprocessing()
 
 
 
