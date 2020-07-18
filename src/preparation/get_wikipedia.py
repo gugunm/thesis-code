@@ -88,8 +88,7 @@ def unlistTerms():
     
     return disjoinTerms
 
-def getListOfDirs():
-    dirName = '../../data/wiki';
+def getListOfDirs(dirName = '../../data/wiki'):
     # Create a List    
     listOfDirs = list()
      
