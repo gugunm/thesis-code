@@ -86,21 +86,39 @@ def windowing(idxTarget, tokenAyat, n_window):
         # len target kalau lebih dari length nya
         right = (len(tokenAyat) - 1) if((idxTarget + half_window) > (len(tokenAyat) - 1)) else (idxTarget + half_window)
         
+        # ambil kata-kata di kiri
         leftWords = tokenAyat[left : idxTarget]
+        # ambil kata-kata dikanan
         rightWords = tokenAyat[idxTarget+1 : right + 1]
+    
+        # gabungkan jadi satu array
+        arrWindowing = [tokenAyat[idxTarget]] + leftWords + rightWords
         
-        print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
+        #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
+        print(arrWindowing)
+        
     
 
 '''
-Input   : seluruh pages dan func winidowingPage
-Output  : setiap window beserta weightnya per term
+Input   : token ayat dan jumlah windowing
+Output  : matrix terms-by-concepts dari suatu ayat
 Problem : - jumlah overlaps menggunakan wordNet 
           - jumlah kata di page, sesuai dengan jumlah konsepnya
           - jumlah setiap term muncul di beberapa dokumen wikipedia (DF)
 '''
 def weighting(tokenAyat, n_window):
+    # definisikan concepts
+    listConcepts = [1, 2, 3]
+    # definisikan terms
+    listTerms = [1, 2, 3]
+    # inisialisasi matrix kosongnya dulu
+    dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
+    
+    print(dfTermsConcepts)
+    
+    # looping for every word as target words
     for idxTarget, targetWord in enumerate(tokenAyat):
+        # --- function windowing() ---
         windowingWords = windowing(idxTarget, tokenAyat, n_window)
 #        return windowingWords
     # Ambil target word dari hasil return func windowing()
@@ -126,14 +144,14 @@ def leskAlgorithm(n_window = 5):
         weightedAyat = weighting(tokenAyat, n_window)
         # return matrix of ayat
 #        print(weightedAyat)
-#        print("====")
-        break
+        print("====")
+#        break
     
-    
+
 
 if __name__ == '__main__':
 #    mergeTermsFiles()
-    n_window = 7
+    n_window = 5
     leskAlgorithm(n_window)
     
     '''
