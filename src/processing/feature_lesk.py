@@ -5,10 +5,12 @@ import sys
 sys.path.insert(1, '../preparation/')
 # file get_wikipedia
 import get_wikipedia as gw
-# file preprocess
-import preprocess as pr
 # file credentials
 import credentials as creds
+# file preprocess
+import preprocess as pr
+# file create_terms
+import create_terms as ct
 import codecs
 import pickle
 import glob
@@ -59,6 +61,37 @@ def mergeTermsFiles():
 
 
 '''
+Input   : nama main folder buat nampung outputnya
+Output  : folder data/wiki_bin page concepts window ( mirip kayak mergeTermsFiles() )
+Problem : create folder dengan bin per pages
+'''
+def createConceptsFiles(nameMainDir = 'bin_wikipedia'):   
+    gw.createDir(nameMainDir, path='../../data/')
+    # list path of dirs
+    termsDirList = gw.getListOfDirs()
+    # hapus dir ke wikinya, karena masuk di list
+    termsDirList.pop(0)
+    
+    for i, termDir in enumerate(termsDirList):
+        termName = termDir[16:]
+        fileNameList = glob.glob("{}/*.txt".format(termDir))
+        # create directorynya
+        gw.createDir(termName, path= "../../data/{}/".format(nameMainDir))
+        for j, fname in enumerate(fileNameList):
+            with codecs.open('../../data/{}/{}/{}_page_{}.bin.txt'.format(nameMainDir, termName, termName, j), 'wb') as outfile:
+                with codecs.open(fname, 'r', 'utf-8') as infile:
+                    lines = infile.readlines()
+                    # clean dari whitespcae hingga hanya words saja
+                    cleanTxt = cleanWikiFile(lines)
+                    # clean sampai jadi list kayak ayat alquran
+                    listCleanTxt = pr.cleaningData(cleanTxt)
+                    # save list ke file txt, biar mudah pas di read
+                    pickle.dump(listCleanTxt, outfile)
+            print("{}/{} from {}/{} {} : done".format(j, len(fileNameList)-1, i, len(termsDirList)-1, termName))
+        
+
+
+'''
 Input   : path to binary file of wiki page
 Output  : return type list of file binary
 '''
@@ -96,8 +129,41 @@ def windowing(idxTarget, tokenAyat, n_window):
         
         #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
         print(arrWindowing)
-        
-    
+
+
+'''
+Input   : - matrix zero dengan index terms dan kolom concepts
+          - windowing words
+Output  : matrix terms-by-concepts yang sudah ada weight-nya
+Problem : - weighting dengan wordnet
+          - hitung overlapping dengan lesk algorithm
+          - normalize dengan tf-idf
+'''
+def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts):     
+    print('termByConceptMatrixWeighted')
+
+
+'''
+Input   : -
+Output  : list of terms
+Problem : ambil terms wiki di  google sheet
+'''
+def getTerms():
+    # ambil data terms dari drive
+    listTerms= ct.getListTermsFromSheet(fileName=fileDriveName, wsNameUniqueWords="wiki-unique-words")
+    print(listTerms)
+
+
+'''
+Input   : -
+Output  : list concepts
+Problem : ambil list nama file dari wikipedia data/wiki_bin
+'''
+def getConcepts():
+    # ambil file path name dari concepts pages
+    fileNameList = glob.glob("../../data/wiki_bin/*/*.bin.txt")
+    print(fileNameList)
+
 
 '''
 Input   : token ayat dan jumlah windowing
@@ -109,8 +175,8 @@ Problem : - jumlah overlaps menggunakan wordNet
 def weighting(tokenAyat, n_window):
     # definisikan concepts
     listConcepts = [1, 2, 3]
-    # definisikan terms
-    listTerms = [1, 2, 3]
+    # definisikan terms dengan --- function getTerms() ---
+    listTerms = getTerms()
     # inisialisasi matrix kosongnya dulu
     dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
     
@@ -150,9 +216,9 @@ def leskAlgorithm(n_window = 5):
 
 
 if __name__ == '__main__':
-#    mergeTermsFiles()
-    n_window = 5
-    leskAlgorithm(n_window)
+    createConceptsFiles()
+#    n_window = 5
+#    leskAlgorithm(n_window)
     
     '''
     # Get unique words from google sheet
