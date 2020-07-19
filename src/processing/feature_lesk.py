@@ -17,6 +17,7 @@ import glob
 import re
 import ast
 import math
+import os
 
 # NAMA FILE DRIVE
 fileDriveName = "dummy-dataset-quran"  # "dataset-quran"
@@ -34,6 +35,7 @@ def cleanWikiFile(linesTxt):
     # hapus char kecuali huruf
     mystr = re.sub('[^A-Za-z]+',' ', mystr)
     return mystr
+
 
 '''
 Input   : path to directory wiki
@@ -111,6 +113,8 @@ Problem : - untuk data yang kurang dari jumlah window yang saat itu digunakan ? 
 '''
 def windowing(idxTarget, tokenAyat, n_window):
     # check n_window apakan ganjil atau genap
+    if(n_window % 2) == 0:
+        n_window += 1
     # kalau ganjil
     if(n_window % 2) == 1:
         half_window = math.floor(n_window/2)
@@ -159,10 +163,24 @@ Input   : -
 Output  : list concepts
 Problem : ambil list nama file dari wikipedia data/wiki_bin
 '''
+def setConceptsPagesList(mainDirName = 'wiki_bin', outputFileName = 'concepts'):
+    concepts = []
+    dirNameList = glob.glob("../../data/{}/*".format(mainDirName))
+    for dirName in dirNameList:
+        for file in os.listdir(dirName):
+            if file.endswith(".bin.txt"):
+                concepts.append({
+                        "path" : os.path.join(dirName, file), #print(os.path.join(dirName, file))
+                        "name" : file #print(file)
+                        })
+    with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
+        pickle.dump(concepts, outfile)
+    print(concepts)
+
+
 def getConcepts():
-    # ambil file path name dari concepts pages
-    fileNameList = glob.glob("../../data/wiki_bin/*/*.bin.txt")
-    print(fileNameList)
+    # buka file picklenya yang isinya itu dict concepts
+    print('ok')
 
 
 '''
@@ -216,7 +234,7 @@ def leskAlgorithm(n_window = 5):
 
 
 if __name__ == '__main__':
-    createConceptsFiles()
+    setConceptsPagesList()
 #    n_window = 5
 #    leskAlgorithm(n_window)
     
