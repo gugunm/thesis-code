@@ -1,27 +1,25 @@
 # -*- coding: utf-8 -*-
+# == PURE PACKAGES ==
+from nltk.corpus import wordnet as wn
 import pandas as pd
-import sys
-# import func from another file in other directory
-sys.path.insert(1, '../preparation/')
-# file get_wikipedia
-import get_wikipedia as gw
-# file credentials
-import credentials as creds
-# file preprocess
-import preprocess as pr
-# file create_terms
-import create_terms as ct
+import numpy as np
 import codecs
 import pickle
-import glob
-import re
-import ast
 import math
+import glob
+import ast
+import sys
+import re
 import os
-import numpy as np
-
-# NAMA FILE DRIVE
+# == FILE AS PACKAGES ==
+sys.path.insert(1, '../preparation/')  # import func from another file in other directory
+import get_wikipedia as gw             # file preparation/get_wikipedia.py
+import credentials as creds            # file preparation/credentials.py
+import create_terms as ct              # file processing/create_terms
+import preprocess as pr                # file processing/preprocess
+# == MAIN FILE DRIVE ==
 fileDriveName = "dummy-dataset-quran"  # "dataset-quran"
+
 
 '''
 Input    : wiki file
@@ -91,7 +89,6 @@ def createConceptsFiles(nameMainDir = 'bin_wikipedia'):
                     # save list ke file txt, biar mudah pas di read
                     pickle.dump(listCleanTxt, outfile)
             print("{}/{} from {}/{} {} : done".format(j, len(fileNameList)-1, i, len(termsDirList)-1, termName))
-        
 
 
 '''
@@ -114,6 +111,7 @@ Problem : - untuk data yang kurang dari jumlah window yang saat itu digunakan ? 
 '''
 def windowing(idxTarget, tokenAyat, n_window):
     # check n_window apakan ganjil atau genap
+    # kalau genap, tambah 1 biar ganjil - dipaksakan
     if(n_window % 2) == 0:
         n_window += 1
     # kalau ganjil
@@ -183,8 +181,9 @@ Problem : - weighting dengan wordnet
           - normalize dengan tf-idf
 '''
 def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts):  
+    # Main Weighting
+    # WordNet
     return dfTermsConcepts
-#    print('termByConceptMatrixWeighted')
 
 
 '''
@@ -249,12 +248,13 @@ def leskAlgorithm(n_window = 5):
         listWeightedAyat.append(weightedAyat)
         print(listWeightedAyat)
         break
-    
 
 
 if __name__ == '__main__':
-    n_window = 5
-    leskAlgorithm(n_window)
+    for word in wn.words():
+        print(word)
+#    n_window = 5
+#    leskAlgorithm(n_window)
     
     '''
     # Get unique words from google sheet
