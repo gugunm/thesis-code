@@ -18,6 +18,7 @@ import re
 import ast
 import math
 import os
+import numpy as np
 
 # NAMA FILE DRIVE
 fileDriveName = "dummy-dataset-quran"  # "dataset-quran"
@@ -97,10 +98,10 @@ def createConceptsFiles(nameMainDir = 'bin_wikipedia'):
 Input   : path to binary file of wiki page
 Output  : return type list of file binary
 '''
-def readWikiPage(path = '../../data/merge_wiki/aba.bin.txt'):
+def readFileBin(path = ''):
     file = open(path, 'rb')
     object_file = pickle.load(file)
-    print(object_file)
+    return object_file
     # file.close()
 
 
@@ -129,22 +130,10 @@ def windowing(idxTarget, tokenAyat, n_window):
         rightWords = tokenAyat[idxTarget+1 : right + 1]
     
         # gabungkan jadi satu array
-        arrWindowing = [tokenAyat[idxTarget]] + leftWords + rightWords
+        windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
         
         #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
-        print(arrWindowing)
-
-
-'''
-Input   : - matrix zero dengan index terms dan kolom concepts
-          - windowing words
-Output  : matrix terms-by-concepts yang sudah ada weight-nya
-Problem : - weighting dengan wordnet
-          - hitung overlapping dengan lesk algorithm
-          - normalize dengan tf-idf
-'''
-def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts):     
-    print('termByConceptMatrixWeighted')
+        return windowingWords
 
 
 '''
@@ -155,7 +144,7 @@ Problem : ambil terms wiki di  google sheet
 def getTerms():
     # ambil data terms dari drive
     listTerms= ct.getListTermsFromSheet(fileName=fileDriveName, wsNameUniqueWords="wiki-unique-words")
-    print(listTerms)
+    return listTerms
 
 
 '''
@@ -165,22 +154,37 @@ Problem : ambil list nama file dari wikipedia data/wiki_bin
 '''
 def setConceptsPagesList(mainDirName = 'wiki_bin', outputFileName = 'concepts'):
     concepts = []
+    # dir buat ngambil nama pages setiap concepts-nya
     dirNameList = glob.glob("../../data/{}/*".format(mainDirName))
     for dirName in dirNameList:
         for file in os.listdir(dirName):
             if file.endswith(".bin.txt"):
-                concepts.append({
-                        "path" : os.path.join(dirName, file), #print(os.path.join(dirName, file))
-                        "name" : file #print(file)
-                        })
+                concept = pd.DataFrame({'path' : [os.path.join(dirName, file)],'name' : [file] })
+                concepts.append(concept)
     with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
         pickle.dump(concepts, outfile)
-    print(concepts)
+    print(concepts[0].name)
 
 
 def getConcepts():
     # buka file picklenya yang isinya itu dict concepts
-    print('ok')
+    path = '../../data/concepts.bin.txt'
+    concepts = readFileBin(path)
+    conceptsName = np.ravel([concept.name.values.tolist() for concept in concepts])
+    return conceptsName
+
+
+'''
+Input   : - matrix zero dengan index terms dan kolom concepts
+          - windowing words
+Output  : matrix terms-by-concepts yang sudah ada weight-nya
+Problem : - weighting dengan wordnet
+          - hitung overlapping dengan lesk algorithm
+          - normalize dengan tf-idf
+'''
+def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts):  
+    return dfTermsConcepts
+#    print('termByConceptMatrixWeighted')
 
 
 '''
@@ -191,22 +195,30 @@ Problem : - jumlah overlaps menggunakan wordNet
           - jumlah setiap term muncul di beberapa dokumen wikipedia (DF)
 '''
 def weighting(tokenAyat, n_window):
+    print('- Creating DF Terms Concept...')
     # definisikan concepts
-    listConcepts = [1, 2, 3]
+    listConcepts = getConcepts()
     # definisikan terms dengan --- function getTerms() ---
     listTerms = getTerms()
     # inisialisasi matrix kosongnya dulu
     dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
     
-    print(dfTermsConcepts)
+    #print(dfTermsConcepts)
     
+    print('- Windowing & Weighting...')
     # looping for every word as target words
     for idxTarget, targetWord in enumerate(tokenAyat):
+        print('  # Terget Word {}/{}'.format(idxTarget, len(tokenAyat)-1))
         # --- function windowing() ---
+        print('    - Windowing...')
         windowingWords = windowing(idxTarget, tokenAyat, n_window)
-#        return windowingWords
-    # Ambil target word dari hasil return func windowing()
-    # Looping satu-persatu
+        # --- function termByConceptMatrixWeighted() ---
+        print('    - Weighting...')
+        # looping recursive buat ngisi nilai si dfTermsConcepts-nya
+        dfTermsConcepts = termByConceptMatrixWeighted(windowingWords, dfTermsConcepts)
+        
+    return dfTermsConcepts
+
     # Lakukan proses weighting disetiap pages untuk setiap termsnya
     # weight untuk target word (rumusnya ada di dokumen / catetan)
     # setiap term akan memiliki weight dalam vector (concept vector) dengan panjang |wiki pages|
@@ -218,25 +230,31 @@ Problem : - looping tiap ayat (doc)
           - untuk setiap ayatnya, lakukan weighting oleh def yg lain
 '''
 def leskAlgorithm(n_window = 5):
+    # declare list buat nampung ayat yang udah di weighted
+    listWeightedAyat = []
     # ambil data dari drive
     ayatInString = creds.getAsDataframe(fileDriveName, 'proceed-data').Terjemahan.values
     
     # Looping datanya
-    for ayat in ayatInString:
+    for idx, ayat in enumerate(ayatInString):
+        print('==== AYAT - {}/{} ===='.format(idx, len(ayatInString)-1))
+        # ubah string ke bentuk array
         tokenAyat = ast.literal_eval(ayat)
+        
         # --- weighting pake function weighting() ---
+        print('# Lesk Algorithm...')
         weightedAyat = weighting(tokenAyat, n_window)
-        # return matrix of ayat
-#        print(weightedAyat)
-        print("====")
-#        break
+        
+        # append weighted ayat ke list
+        listWeightedAyat.append(weightedAyat)
+        print(listWeightedAyat)
+        break
     
 
 
 if __name__ == '__main__':
-    setConceptsPagesList()
-#    n_window = 5
-#    leskAlgorithm(n_window)
+    n_window = 5
+    leskAlgorithm(n_window)
     
     '''
     # Get unique words from google sheet
