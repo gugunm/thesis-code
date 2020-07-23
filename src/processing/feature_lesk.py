@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# == PURE PACKAGES ==
+# == ORIGINAL PACKAGES ==
 from nltk.corpus import wordnet as wn
 import pandas as pd
 import numpy as np
@@ -66,7 +66,7 @@ Input   : nama main folder buat nampung outputnya
 Output  : folder data/wiki_bin page concepts window ( mirip kayak mergeTermsFiles() )
 Problem : create folder dengan bin per pages
 '''
-def createConceptsFiles(nameMainDir = 'bin_wikipedia'):   
+def createConceptsFiles(nameMainDir = 'wiki_bin'):   
     gw.createDir(nameMainDir, path='../../data/')
     # list path of dirs
     termsDirList = gw.getListOfDirs()
@@ -157,7 +157,7 @@ def setConceptsPagesList(mainDirName = 'wiki_bin', outputFileName = 'concepts'):
     for dirName in dirNameList:
         for file in os.listdir(dirName):
             if file.endswith(".bin.txt"):
-                concept = pd.DataFrame({'path' : [os.path.join(dirName, file)],'name' : [file] })
+                concept = pd.DataFrame({'path' : [os.path.join(dirName, file)],'name' : [file[:-8]] })
                 concepts.append(concept)
     with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
         pickle.dump(concepts, outfile)
@@ -169,13 +169,15 @@ def getConcepts():
     path = '../../data/concepts.bin.txt'
     concepts = readFileBin(path)
     conceptsName = np.ravel([concept.name.values.tolist() for concept in concepts])
-    return conceptsName
+    conceptsPath = np.ravel([concept.path.values.tolist() for concept in concepts])
+    return conceptsName, conceptsPath
 
 
 '''
 Input   : - matrix zero dengan index terms dan kolom concepts
           - windowing words
-Output  : matrix terms-by-concepts yang sudah ada weight-nya
+          - target word
+Output  : matrix terms-by-concepts yang sudah ada weight-nya dari target word pada suatu ayat
 Problem : - weighting dengan wordnet
           - hitung overlapping dengan lesk algorithm
           - normalize dengan tf-idf
@@ -196,7 +198,7 @@ Problem : - jumlah overlaps menggunakan wordNet
 def weighting(tokenAyat, n_window):
     print('- Creating DF Terms Concept...')
     # definisikan concepts
-    listConcepts = getConcepts()
+    listConcepts, _ = getConcepts()
     # definisikan terms dengan --- function getTerms() ---
     listTerms = getTerms()
     # inisialisasi matrix kosongnya dulu
@@ -251,10 +253,11 @@ def leskAlgorithm(n_window = 5):
 
 
 if __name__ == '__main__':
-    for word in wn.words():
-        print(word)
+#    for word in wn.words():
+#        print(word)
 #    n_window = 5
 #    leskAlgorithm(n_window)
+    setConceptsPagesList()
     
     '''
     # Get unique words from google sheet
