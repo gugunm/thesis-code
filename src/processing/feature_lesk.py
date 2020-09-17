@@ -107,7 +107,7 @@ Input   : jumlah windowing, ayat dan target word (indexnya)
 Output  : return words berdasarkan windowsnya
 Problem : - untuk data yang kurang dari jumlah window yang saat itu digunakan ? return semuanya
           - cek dengan print dokumen dummy
-          - posisi target ada di (awal, tengah, ujung)
+          - gimana kalo posisi target ada di (awal, tengah, ujung)
 '''
 def windowing(idxTarget, tokenAyat, n_window):
     # check n_window apakan ganjil atau genap
@@ -161,6 +161,7 @@ def setConceptsPagesList(mainDirName = 'wiki_bin', outputFileName = 'concepts'):
                 concepts.append(concept)
     with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
         pickle.dump(concepts, outfile)
+    print(concepts)
     print(concepts[0].name)
 
 
@@ -173,6 +174,7 @@ def getConcepts():
     return conceptsName, conceptsPath
 
 
+''' ========== ON PROCESS Date: 17/09/2020 =========='''
 '''
 Input   : - matrix zero dengan index terms dan kolom concepts
           - windowing words
@@ -181,7 +183,7 @@ Output  : matrix terms-by-concepts yang sudah ada weight-nya dari target word pa
 Problem : - weighting dengan wordnet
           - hitung overlapping dengan lesk algorithm
           - normalize dengan tf-idf
-'''
+''' 
 def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts):  
     # Main Weighting
     # WordNet
@@ -196,7 +198,7 @@ Problem : - jumlah overlaps menggunakan wordNet
           - jumlah setiap term muncul di beberapa dokumen wikipedia (DF)
 '''
 def weighting(tokenAyat, n_window):
-    print('- Creating DF Terms Concept...')
+    print('- Creating DataFrame Terms Concept...')
     # definisikan concepts
     listConcepts, _ = getConcepts()
     # definisikan terms dengan --- function getTerms() ---
@@ -257,7 +259,7 @@ if __name__ == '__main__':
 #        print(word)
 #    n_window = 5
 #    leskAlgorithm(n_window)
-    setConceptsPagesList()
+#    setConceptsPagesList()
     
     '''
     # Get unique words from google sheet
