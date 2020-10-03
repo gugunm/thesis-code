@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # == ORIGINAL PACKAGES ==
 from nltk.corpus import wordnet as wn
+from nltk.tokenize import RegexpTokenizer
 import pandas as pd
 import numpy as np
 import codecs
@@ -176,6 +177,41 @@ def getConcepts():
 
 ''' ========== ON PROCESS Date: 17/09/2020 =========='''
 '''
+Input   : - hasil ravel of list of tokenization definition from wordnet
+Output  : Count of overlap
+Problem : - cara ngitungnya gimana
+''' 
+def countOverlapDefinition(windowingWordsDef):
+    ravelWindowingWordsDef = [item for sublist in windowingWordsDef for item in sublist]
+    uniqueWordDef = list(set(ravelWindowingWordsDef))
+    count = 0
+    for uniqueWord in uniqueWordDef:
+        checkWord = True
+        for wordDef in windowingWordsDef:
+            if uniqueWord not in wordDef:
+                checkWord = False
+                break
+        if checkWord:
+            count += 1
+            print(uniqueWord)
+    return count
+
+'''
+Input   : - word
+Output  : hasil ravel of list of tokenization definition from wordnet
+Problem : - remove punct
+          - return ravel dari list of definition of word in tokenization
+'''   
+def tokenizeWordnetDefinition(word):
+    listOfDefinition = []
+    definitions = wn.synsets(word)
+    tokenizer = RegexpTokenizer(r'\w+')
+    for d in definitions:
+        listOfDefinition.append(tokenizer.tokenize(d.definition()))
+    ravelListOfDefinition = [item for sublist in listOfDefinition for item in sublist]
+    return ravelListOfDefinition
+
+'''
 Input   : - matrix zero dengan index terms dan kolom concepts
           - windowing words
           - target word
@@ -183,8 +219,15 @@ Output  : matrix terms-by-concepts yang sudah ada weight-nya dari target word pa
 Problem : - weighting dengan wordnet
           - hitung overlapping dengan lesk algorithm
           - normalize dengan tf-idf
-''' 
+'''     
 def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts):  
+    windowingWordsDef = []
+    for w in windowingWords:
+        tokenizedDef = tokenizeWordnetDefinition(w)
+        windowingWordsDef.append(tokenizedDef)
+    countOverlaps = countOverlapDefinition(windowingWordsDef)
+    print(countOverlaps)
+    # print(windowingWordsDef)
     # Main Weighting
     # WordNet
     return dfTermsConcepts
@@ -212,9 +255,11 @@ def weighting(tokenAyat, n_window):
     # looping for every word as target words
     for idxTarget, targetWord in enumerate(tokenAyat):
         print('  # Terget Word {}/{}'.format(idxTarget, len(tokenAyat)-1))
+        print('    Target Word : {}'.format(targetWord))
         # --- function windowing() ---
         print('    - Windowing...')
         windowingWords = windowing(idxTarget, tokenAyat, n_window)
+        print('    Windowing Words : {}'.format(windowingWords))
         # --- function termByConceptMatrixWeighted() ---
         print('    - Weighting...')
         # looping recursive buat ngisi nilai si dfTermsConcepts-nya
@@ -254,11 +299,14 @@ def leskAlgorithm(n_window = 5):
         break
 
 
+
 if __name__ == '__main__':
-#    for word in wn.words():
-#        print(word)
-#    n_window = 5
-#    leskAlgorithm(n_window)
+    # for word in wn.words():
+    #     print(word)
+    # print(syns[0].definition())
+    # print(syns)
+    n_window = 5
+    leskAlgorithm(n_window)
 #    setConceptsPagesList()
     
     '''

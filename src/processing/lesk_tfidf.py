@@ -117,7 +117,7 @@ if __name__ == '__main__':
 #    fileName = "dataset-quran"
 #    tf_dummy()
 #    tf = get_tf()
-#    df = df_dummy()
+    # df = df_dummy()
     df = get_df()
 
 
