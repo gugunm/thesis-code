@@ -18,6 +18,7 @@ import get_wikipedia as gw             # file preparation/get_wikipedia.py
 import credentials as creds            # file preparation/credentials.py
 import create_terms as ct              # file processing/create_terms
 import preprocess as pr                # file processing/preprocess
+import lesk_tfidf as leskTfIdf         # file processing/lesk_tfidf
 # == MAIN FILE DRIVE ==
 fileDriveName = "dummy-dataset-quran"  # "dataset-quran"
 
@@ -174,8 +175,6 @@ def getConcepts():
     conceptsPath = np.ravel([concept.path.values.tolist() for concept in concepts])
     return conceptsName, conceptsPath
 
-
-''' ========== ON PROCESS Date: 17/09/2020 =========='''
 '''
 Input   : - hasil ravel of list of tokenization definition from wordnet
 Output  : Count of overlap
@@ -195,6 +194,27 @@ def countOverlapDefinition(windowingWordsDef):
             count += 1
             print(uniqueWord)
     return count
+
+''' ========== ON PROCESS Date: 03/10/2020 =========='''
+'''
+Input   : - windowingWords
+Output  : Vector of terms by concepts
+Problem : - ngitungnya
+''' 
+def countOverlapsConcept(windowingWords, targetWord, countOverlapsContext):
+    targetWordVector = []
+    tf = leskTfIdf.get_tf()
+    
+    listOfPages = tf.columns
+    
+    dfTermsWindowingConcepts = pd.DataFrame(0, index=windowingWords, columns=listOfPages)
+    for page in listOfPages:
+        for word in windowingWords:
+            dfTermsWindowingConcepts.loc[word, page] = tf.loc[word, page] + countOverlapsContext
+            
+    print(dfTermsWindowingConcepts)
+    
+    return targetWordVector
 
 '''
 Input   : - word
@@ -220,13 +240,17 @@ Problem : - weighting dengan wordnet
           - hitung overlapping dengan lesk algorithm
           - normalize dengan tf-idf
 '''     
-def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts):  
+def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts, targetWord):
+    # Count Overlaps Context
     windowingWordsDef = []
     for w in windowingWords:
         tokenizedDef = tokenizeWordnetDefinition(w)
         windowingWordsDef.append(tokenizedDef)
-    countOverlaps = countOverlapDefinition(windowingWordsDef)
-    print(countOverlaps)
+    countOverlapsContext = countOverlapDefinition(windowingWordsDef)
+    
+    # Count Overlaps Concept
+    countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
+    
     # print(windowingWordsDef)
     # Main Weighting
     # WordNet
@@ -263,7 +287,7 @@ def weighting(tokenAyat, n_window):
         # --- function termByConceptMatrixWeighted() ---
         print('    - Weighting...')
         # looping recursive buat ngisi nilai si dfTermsConcepts-nya
-        dfTermsConcepts = termByConceptMatrixWeighted(windowingWords, dfTermsConcepts)
+        dfTermsConcepts = termByConceptMatrixWeighted(windowingWords, dfTermsConcepts, targetWord)
         
     return dfTermsConcepts
 
@@ -299,15 +323,19 @@ def leskAlgorithm(n_window = 5):
         break
 
 
-
 if __name__ == '__main__':
     # for word in wn.words():
     #     print(word)
     # print(syns[0].definition())
     # print(syns)
-    n_window = 5
-    leskAlgorithm(n_window)
-#    setConceptsPagesList()
+    # n_window = 5
+    # leskAlgorithm(n_window)
+
+    windowingWords = ['name', 'allah', 'beneficent']
+    targetWord = 'name'
+    countOverlapsContext = 1
+    countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
+    
     
     '''
     # Get unique words from google sheet
