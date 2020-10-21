@@ -210,6 +210,7 @@ def countOverlapsConcept(windowingWords, targetWord, countOverlapsContext):
     dfTermsWindowingConcepts = pd.DataFrame(0, index=windowingWords, columns=listOfPages)
     for page in listOfPages:
         for word in windowingWords:
+            # Cell diisi jumlah term frequency + jumlah overlaps
             dfTermsWindowingConcepts.loc[word, page] = tf.loc[word, page] + countOverlapsContext
             
     print(dfTermsWindowingConcepts)

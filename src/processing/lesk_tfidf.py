@@ -71,7 +71,7 @@ def get_tf(path = '../../data/lesk_tf_dummy.bin.txt'):
     return tf
 
 
-''' ========== ON PROCESS Date: 17/09/2020 =========='''
+''' ========== DONE Date: 17/09/2020 =========='''
 '''
 Desc    : DOCUMENT FREQUENCY PERCOBAAN
 Input   : -
@@ -93,6 +93,7 @@ def df_dummy(outputFileName = 'lesk_df_dummy'):
     # inisialisasi matrix kosongnya dulu
     dfDocFreq = pd.DataFrame(0, index=listTerms, columns=['docfreq'])
     
+    sizeDoc = len(listConceptsPath)
     for idxTerm, term in enumerate(listTerms):
         dfOfTerm = 0
         for idxConceptPath, conceptPath in enumerate(listConceptsPath):
@@ -100,15 +101,33 @@ def df_dummy(outputFileName = 'lesk_df_dummy'):
             freq = fileConcept.count(term)
             if freq >= 1:
                 dfOfTerm += 1
-        dfDocFreq.loc[term, 'docfreq'] = dfOfTerm
+        dfDocFreq.loc[term, 'docfreq'] = math.log10(sizeDoc/dfOfTerm) 
         print('{}/{} : {}[{}] \u2713'.format(idxTerm, len(listTerms)-1, term, dfOfTerm))
     
     with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
         pickle.dump(dfDocFreq, outfile) 
         
 def get_df(path = '../../data/lesk_df_dummy.bin.txt'):
-    tf = fl.readFileBin(path)
-    return tf
+    df = fl.readFileBin(path)
+    return df
+
+
+''' ========== ON PROCESS Date: 21/10/2020 =========='''
+'''
+Desc    : IDF
+Input   : -
+Output  : matrix idf.
+'''
+def tf_idf(dfTfWithOverlaps, dfDocFreq):
+    terms = dfTfWithOverlaps.index
+    docs  = dfTfWithOverlaps.columns
+#    tfidf = np.zeros((len(terms), len(docs)), dtype=float)
+    dfTfIdf = dfTfWithOverlaps.copy()
+    for i, doc in enumerate(docs):
+        for j, term in enumerate(terms):
+            dfTfIdf.loc[term, doc] = dfTfWithOverlaps.loc[term, doc]*dfDocFreq.loc[term, 'docfreq']
+    return dfTfIdf
+
 
 if __name__ == '__main__':
     # get creds
@@ -116,9 +135,13 @@ if __name__ == '__main__':
 #    # file sheet name
 #    fileName = "dataset-quran"
 #    tf_dummy()
-    tf = get_tf()
-    # df = df_dummy()
-    # df = get_df()
+#    tf = get_tf()
+#     df = df_dummy()
+#     df = get_df()
+    
+#    tf_result = get_tf()
+#    df_result = get_df()
+#    tfIdf_result = tf_idf(tf_result, df_result)
 
 
 
