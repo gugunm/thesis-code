@@ -112,28 +112,21 @@ Problem : - untuk data yang kurang dari jumlah window yang saat itu digunakan ? 
           - gimana kalo posisi target ada di (awal, tengah, ujung)
 '''
 def windowing(idxTarget, tokenAyat, n_window):
-    # check n_window apakan ganjil atau genap
-    # kalau genap, tambah 1 biar ganjil - dipaksakan
-    if(n_window % 2) == 0:
-        n_window += 1
-    # kalau ganjil
-    if(n_window % 2) == 1:
-        half_window = math.floor(n_window/2)
-        # 0 kalau ada minus
-        left = 0 if((idxTarget - half_window) < 0) else (idxTarget - half_window)
-        # len target kalau lebih dari length nya
-        right = (len(tokenAyat) - 1) if((idxTarget + half_window) > (len(tokenAyat) - 1)) else (idxTarget + half_window)
-        
-        # ambil kata-kata di kiri
-        leftWords = tokenAyat[left : idxTarget]
-        # ambil kata-kata dikanan
-        rightWords = tokenAyat[idxTarget+1 : right + 1]
+    # 0 kalau ada minus
+    left = 0 if((idxTarget - n_window) < 0) else (idxTarget - n_window)
+    # len target kalau lebih dari length nya
+    right = (len(tokenAyat) - 1) if((idxTarget + n_window) > (len(tokenAyat) - 1)) else (idxTarget + n_window)
     
-        # gabungkan jadi satu array
-        windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
-        
-        #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
-        return windowingWords
+    # ambil kata-kata di kiri
+    leftWords = tokenAyat[left : idxTarget]
+    # ambil kata-kata dikanan
+    rightWords = tokenAyat[idxTarget+1 : right + 1]
+
+    # gabungkan jadi satu array
+    windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
+    
+    #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
+    return windowingWords
 
 
 '''
@@ -195,15 +188,69 @@ def countOverlapDefinition(windowingWordsDef):
             print(uniqueWord)
     return count
 
-''' ========== ON PROCESS Date: 03/10/2020 =========='''
+
+
+''' ========== DONE Date: 21/10/2020 =========='''
+'''
+Input   : insert vector target word ke matriks dataframe ayat
+Output  : matriks dataframe ayat
+Problem : -
+''' 
+def insertTargetWordVectorToDf(dfTermsConcepts, dictTargetWordVector):
+    # ambil target word sembari hapus key-nya
+    targetWord = dictTargetWordVector.pop('target_kata', None)
+    # dict dijadikan array - mempermudah looping
+    dictItems = dictTargetWordVector.items()
+    
+    # looping tiap items dict target word
+    for i, item in enumerate(dictItems):
+        # ambil pageName dari tuple item
+        pageName = item[0]
+        if pageName in dfTermsConcepts.columns:
+            dfTermsConcepts.loc[targetWord, pageName] = dictTargetWordVector[pageName]
+        else:
+            dfTermsConcepts.loc[targetWord, pageName] = 0.0
+        #print('INSERTED : ', i, ' / ', dfTermsConcepts.loc[targetWord, pageName])
+    
+    return dfTermsConcepts
+
+
+
+''' ========== DONE Date: 21/10/2020 =========='''
+'''
+Input   : hitung concept vector untuk target word
+Output  : Vector of target terms by concepts
+Problem : -
+''' 
+def calculateTargetTermConceptVector(dfNormalizedWindowingConcepts, targetWord):
+    # milai concept windows
+    cw = len(dfNormalizedWindowingConcepts.index)
+    # inisiasi untuk target vector
+    dictTargetWordVector = dict()
+    # masukkan target word ke dict
+    dictTargetWordVector['target_kata'] = targetWord
+        
+    # iterate dataframe through columns
+    for (columnName, columnData) in dfNormalizedWindowingConcepts.iteritems():
+        sumOfVectorPage = columnData.values.sum()
+        # hitung nilai rata-rata dari vector terms
+        avgValueOfTargetWord = sumOfVectorPage / cw
+        # masukkan nilai avg ke dict
+        dictTargetWordVector[columnName] = avgValueOfTargetWord
+            
+    return dictTargetWordVector
+
+
+
+''' ========== DONE Date: 21/10/2020 =========='''
 '''
 Input   : - windowingWords
 Output  : Vector of terms by concepts
 Problem : - ngitungnya
 ''' 
 def countOverlapsConcept(windowingWords, targetWord, countOverlapsContext):
-    targetWordVector = []
     tf = leskTfIdf.get_tf()
+    dfDocFreq = leskTfIdf.get_df()
     
     listOfPages = tf.columns
     
@@ -212,10 +259,16 @@ def countOverlapsConcept(windowingWords, targetWord, countOverlapsContext):
         for word in windowingWords:
             # Cell diisi jumlah term frequency + jumlah overlaps
             dfTermsWindowingConcepts.loc[word, page] = tf.loc[word, page] + countOverlapsContext
-            
-    print(dfTermsWindowingConcepts)
     
-    return targetWordVector
+    # Normalize Matriks Term Frequency using IDF
+    dfNormalizedWindowingConcepts = leskTfIdf.tf_idf(dfTermsWindowingConcepts, dfDocFreq)
+    
+    #with codecs.open("../../data/countOverlapsConcept_dummy.bin.txt", 'wb') as outfile:
+        #pickle.dump(dfNormalizedWindowingConcepts, outfile) 
+                
+    return dfNormalizedWindowingConcepts
+
+
 
 '''
 Input   : - word
@@ -231,6 +284,8 @@ def tokenizeWordnetDefinition(word):
         listOfDefinition.append(tokenizer.tokenize(d.definition()))
     ravelListOfDefinition = [item for sublist in listOfDefinition for item in sublist]
     return ravelListOfDefinition
+
+
 
 '''
 Input   : - matrix zero dengan index terms dan kolom concepts
@@ -250,12 +305,20 @@ def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts, targetWord):
     countOverlapsContext = countOverlapDefinition(windowingWordsDef)
     
     # Count Overlaps Concept
-    countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
+    dfNormalizedWindowingConcepts = countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
+    
+    # hitung vector term concept untuk target word
+    # return isi vector buat yang target word aja
+    dictTargetWordVector = calculateTargetTermConceptVector(dfNormalizedWindowingConcepts, targetWord)
+    
+    # function buat masukin vector target word ke dataframe terms concept ayat
+    dfTermsConcepts = insertTargetWordVectorToDf(dfTermsConcepts, dictTargetWordVector)
     
     # print(windowingWordsDef)
     # Main Weighting
     # WordNet
     return dfTermsConcepts
+
 
 
 '''
@@ -296,13 +359,15 @@ def weighting(tokenAyat, n_window):
     # weight untuk target word (rumusnya ada di dokumen / catetan)
     # setiap term akan memiliki weight dalam vector (concept vector) dengan panjang |wiki pages|
 
+
+
 '''
 Input   : file dataset
 Output  : matrices of terms-by-concept sebanyak documents
 Problem : - looping tiap ayat (doc)
           - untuk setiap ayatnya, lakukan weighting oleh def yg lain
 '''
-def leskAlgorithm(n_window = 5):
+def leskAlgorithm(n_window = 2):
     # declare list buat nampung ayat yang udah di weighted
     listWeightedAyat = []
     # ambil data dari drive
@@ -331,12 +396,23 @@ if __name__ == '__main__':
     # print(syns)
     # n_window = 5
     # leskAlgorithm(n_window)
-
+    
+    listConcepts, _ = getConcepts()
+    # definisikan terms dengan --- function getTerms() ---
+    listTerms = getTerms()
+    # inisialisasi matrix kosongnya dulu
+    dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
+    
+    
     windowingWords = ['name', 'allah', 'beneficent']
     targetWord = 'name'
     countOverlapsContext = 1
-    countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
+    dfCountOverlapsConcept = countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
     
+    targetWordDict = calculateTargetTermConceptVector(dfCountOverlapsConcept, targetWord)
+    
+    dfTermsConceptsNew = insertTargetWordVectorToDf(dfTermsConcepts, targetWordDict)
+      
     
     '''
     # Get unique words from google sheet
@@ -345,3 +421,36 @@ if __name__ == '__main__':
         if val == True:
             print(val)
     '''
+    
+    
+    
+    
+    
+    
+    
+    
+'''
+def old_windowing(idxTarget, tokenAyat, n_window):
+    # check n_window apakan ganjil atau genap
+    # kalau genap, tambah 1 biar ganjil - dipaksakan
+    if(n_window % 2) == 0:
+        n_window += 1
+    # kalau ganjil
+    if(n_window % 2) == 1:
+        half_window = math.floor(n_window/2)
+        # 0 kalau ada minus
+        left = 0 if((idxTarget - half_window) < 0) else (idxTarget - half_window)
+        # len target kalau lebih dari length nya
+        right = (len(tokenAyat) - 1) if((idxTarget + half_window) > (len(tokenAyat) - 1)) else (idxTarget + half_window)
+        
+        # ambil kata-kata di kiri
+        leftWords = tokenAyat[left : idxTarget]
+        # ambil kata-kata dikanan
+        rightWords = tokenAyat[idxTarget+1 : right + 1]
+    
+        # gabungkan jadi satu array
+        windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
+        
+        #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
+        return windowingWords
+'''
