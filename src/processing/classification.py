@@ -10,7 +10,56 @@ import feature_lesk as fl
 
 
 
+''' 
+### ON PROCESS Date: 22/10/2020 ###
+Input   : train data & test data
+Output  : nilai probablitas test data menggunakan SNB untuk kelas 0 dan 1
+Problem : -
+''' 
+def calculateSNB():
+    return 0
 
+
+
+''' 
+### ON PROCESS Date: 22/10/2020 ###
+Input   : train data & test data
+Output  : train data yang udah di filter sama 
+          terms yang ada di test data
+Problem : -
+''' 
+def removeTermsOfTestData():
+    return 0
+
+
+
+''' 
+### ON PROCESS Date: 22/10/2020 ###
+Input   : train data & test data
+Output  : hasil prediksi data test
+Problem : -
+''' 
+def predictDataTest():
+    return 0
+
+
+
+''' 
+### ON PROCESS Date: 22/10/2020 ###
+Input   : train data & test data
+Output  : multilabel yang sudah dipecah menjadi binary relevance
+Problem : -
+''' 
+def transformToBinaryRelevance():
+    return 0
+
+
+''' 
+### DONE Date: 22/10/2020 ###
+Input   : listWeightedAyat
+Output  : train data & test data
+Problem : -
+''' 
 def splitData(listWeightedAyat):
     # Shuffle ayat agar yang dijadikan data test adalah random
     random.shuffle(listWeightedAyat)

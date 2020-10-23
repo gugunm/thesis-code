@@ -407,7 +407,7 @@ def leskAlgorithm(n_window = 2):
 
 
 
-''' ========== DONE Date: 21/10/2020 =========='''
+''' ========== DONE Date: 22/10/2020 =========='''
 '''
 Input   : term by concept matrices
 Output  : saved model in .bin.txt
