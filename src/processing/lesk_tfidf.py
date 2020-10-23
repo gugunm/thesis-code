@@ -158,10 +158,13 @@ def tf_idf(dfTfWithOverlaps, dfDocFreq):
     docs  = dfTfWithOverlaps.columns
     # create dataframe for tfidf
     dfTfIdf = dfTfWithOverlaps.copy()
+    
     for i, doc in enumerate(docs):
         for j, term in enumerate(terms):
             # overwrite tfidf dataframe dengan hasil perhitungan tfidf
+#            print(doc, ' - ', term)
             dfTfIdf.loc[term, doc] = dfTfWithOverlaps.loc[term, doc]*dfDocFreq.loc[term, 'docfreq']
+    
     return dfTfIdf
 
 

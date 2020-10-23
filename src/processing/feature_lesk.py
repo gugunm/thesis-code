@@ -125,8 +125,13 @@ def windowing(idxTarget, tokenAyat, n_window):
     # gabungkan jadi satu array
     windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
     
+    # ========= PERUBAHAN PENTING NIH ===========
+    # delete word yang duplikat ketika beada lam satu window
+    # kasusnya ayat ke-5 word "thee" 
+    windowingWordsClean = np.unique(np.array(windowingWords))
+    
     #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
-    return windowingWords
+    return windowingWordsClean
 
 
 '''
@@ -185,7 +190,7 @@ def countOverlapDefinition(windowingWordsDef):
                 break
         if checkWord:
             count += 1
-            print(uniqueWord)
+            # print(uniqueWord)
     return count
 
 
@@ -308,7 +313,7 @@ def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts, targetWord):
     dfNormalizedWindowingConcepts = countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
     
     # hitung vector term concept untuk target word
-    # return isi vector buat yang target word aja
+    # return isi vector buat yang target word aja dalam bentuk dictionary
     dictTargetWordVector = calculateTargetTermConceptVector(dfNormalizedWindowingConcepts, targetWord)
     
     # function buat masukin vector target word ke dataframe terms concept ayat
@@ -372,9 +377,16 @@ def leskAlgorithm(n_window = 2):
     listWeightedAyat = []
     # ambil data dari drive
     ayatInString = creds.getAsDataframe(fileDriveName, 'proceed-data').Terjemahan.values
+    labelsAllAyat = creds.getAsDataframe(fileDriveName, 'proceed-data').iloc[:,4:20].values
     
     # Looping datanya
     for idx, ayat in enumerate(ayatInString):
+        # create dictionary for every ayat
+        dictPerAyat = dict()
+        
+        # insert label ayat to dict
+        dictPerAyat["labelsPerAyat"] = labelsAllAyat[idx]
+                        
         print('==== AYAT - {}/{} ===='.format(idx, len(ayatInString)-1))
         # ubah string ke bentuk array
         tokenAyat = ast.literal_eval(ayat)
@@ -383,10 +395,28 @@ def leskAlgorithm(n_window = 2):
         print('# Lesk Algorithm...')
         weightedAyat = weighting(tokenAyat, n_window)
         
+        # insert weighted ayat ke dictionary per ayat
+        dictPerAyat["weightedAyat"] = weightedAyat
+        
         # append weighted ayat ke list
-        listWeightedAyat.append(weightedAyat)
-        print(listWeightedAyat)
-        break
+        listWeightedAyat.append(dictPerAyat)
+
+#        return weightedAyat
+    
+    return listWeightedAyat
+
+
+
+''' ========== DONE Date: 21/10/2020 =========='''
+'''
+Input   : term by concept matrices
+Output  : saved model in .bin.txt
+Problem : -
+''' 
+def saveTermsByConceptMatrices(listWeightedAyat, outputFileName = 'terms_by_concept_dummy'):
+    with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
+        pickle.dump(listWeightedAyat, outfile) 
+
 
 
 if __name__ == '__main__':
@@ -394,24 +424,27 @@ if __name__ == '__main__':
     #     print(word)
     # print(syns[0].definition())
     # print(syns)
-    # n_window = 5
-    # leskAlgorithm(n_window)
+      
+    n_window = 2
+    listWeightedAyat = leskAlgorithm(n_window)
+    saveTermsByConceptMatrices(listWeightedAyat)
     
-    listConcepts, _ = getConcepts()
-    # definisikan terms dengan --- function getTerms() ---
-    listTerms = getTerms()
-    # inisialisasi matrix kosongnya dulu
-    dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
+#    listConcepts, _ = getConcepts()
+#    # definisikan terms dengan --- function getTerms() ---
+#    listTerms = getTerms()
+#    # inisialisasi matrix kosongnya dulu
+#    dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
     
     
-    windowingWords = ['name', 'allah', 'beneficent']
-    targetWord = 'name'
-    countOverlapsContext = 1
-    dfCountOverlapsConcept = countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
+#    windowingWords = ['name', 'allah', 'beneficent']
+#    windowingWords = ['thee', 'serve', 'thee', 'beseech', 'help']
+#    targetWord = 'thee'
+#    countOverlapsContext = 1
+#    dfCountOverlapsConcept = countOverlapsConcept(windowingWords, targetWord, countOverlapsContext)
+#    
+#    targetWordDict = calculateTargetTermConceptVector(dfCountOverlapsConcept, targetWord)
     
-    targetWordDict = calculateTargetTermConceptVector(dfCountOverlapsConcept, targetWord)
-    
-    dfTermsConceptsNew = insertTargetWordVectorToDf(dfTermsConcepts, targetWordDict)
+#    dfTermsConceptsNew = insertTargetWordVectorToDf(dfTermsConcepts, targetWordDict)
       
     
     '''
