@@ -73,6 +73,21 @@ def calculateProbability(superMatrixSomeClass, sumAllCellSomeClass, totalVocab, 
 
 
 
+''' 
+### ON PROCESS Date: 25/10/2020 ###
+Input   : probClass0, probabilityMatrixClass0
+Output  : nilai probablitas final untuk tiap kelasnya
+Problem : -
+''' 
+def calculateFinalProbability(probClass, probabilityMatrixClass):
+    # ini bagian sigma_|v|.sigma_|s|logPr(Mij|c)
+    sumOfProbCells = probabilityMatrixClass.to_numpy().sum()
+    
+    # ini rumus untuk argMax
+    finalProbabiity = np.log(probClass) + sumOfProbCells
+    
+    return finalProbabiity
+
 
 ''' 
 ### ON PROCESS Date: 25/10/2020 ###
@@ -88,7 +103,9 @@ def calculateSNB(
         totalDocClass0,
         superMatrixClass1, 
         sumAllCellClass1,
-        totalDocClass1
+        totalDocClass1,
+        probClass0, 
+        probClass1
         ):
     
     print("== updating super matrix class 0 with test data... ==")
@@ -109,10 +126,19 @@ def calculateSNB(
     
     # hitung nilai probabilitas untuk tiap cellnya
     probabilityMatrixClass0 = calculateProbability(superMatrixClass0, sumAllCellClass0, totalVocab, totalConcept)
+    probabilityMatrixClass1 = calculateProbability(superMatrixClass1, sumAllCellClass1, totalVocab, totalConcept)
     
+    # tampung seluruh final prob untuk tiap kelasnya
+    finalProbToBeClass0 = calculateFinalProbability(probClass0, probabilityMatrixClass0)
+    finalProbToBeClass1 = calculateFinalProbability(probClass1, probabilityMatrixClass1)
     
+    # tampung di array argmax
+    argMaxArray = [finalProbToBeClass0, finalProbToBeClass1]
     
-    return 0
+    # tentuin classnya berdasarkan nomor indexnya
+    classPrediction = argMaxArray.index(max(argMaxArray))
+    
+    return classPrediction
 
 
 
@@ -122,7 +148,7 @@ Input   : train data & test data
 Output  : hasil prediksi data test
 Problem : -
 ''' 
-def predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_train_data, test_data):
+def predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_train_data, test_data, probClass0, probClass1):
     # |c| jumlah data belonging to the class c
     totalDocClass0 = len(class0_train_data)
     totalDocClass1 = len(class1_train_data)
@@ -143,16 +169,35 @@ def predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_tr
                 totalDocClass0,
                 superMatrixClass1, 
                 sumAllCellClass1,
-                totalDocClass1
+                totalDocClass1,
+                probClass0,
+                probClass1
                 )
 
         # jadikan index data test string
         str_i = str(i)
         # append prediction label ke tabung hasil prediksi
         predResult.setdefault(str_i, []).append(predLabel)
-        break
+        
+        print("# Prediksi label untuk data test ke - {} : {}".format(i, predLabel))
     
     return predResult
+
+
+
+''' 
+### DONE Date: 25/10/2020 ###
+Input   : class0_train_data, class1_train_data, number_train_data
+Output  : class prob untuk tiap kelasnya
+Problem : -
+''' 
+def calculateClassProbability(number_class0_train_data, number_class1_train_data, number_train_data):
+    # probability class 0
+    probClass0 = number_class0_train_data / number_train_data
+    # probability class 1
+    probClass1 = number_class1_train_data / number_train_data
+        
+    return probClass0, probClass1
 
 
 
@@ -219,21 +264,28 @@ if __name__ == '__main__':
     # inisialisasi dict untuk prediction result
     predResult = dict()
     
-#    for currentBinaryLabel in labelsName:
-#        # kelompokkan data train berdasarkan kelasnya
-#        class0_train_data, class1_train_data = devideTrainDataByClass(train_data, currentBinaryLabel)
-#        # Lakukan prediksi untuk tiap data test dengan currentBinaryLabel
-#        predResult = predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_train_data, test_data)
-#        break
+    for currentBinaryLabel in labelsName:
+        # kelompokkan data train berdasarkan kelasnya
+        class0_train_data, class1_train_data = devideTrainDataByClass(train_data, currentBinaryLabel)
+        
+        # hitung probabilitas er kelasnya
+        probClass0, probClass1 = calculateClassProbability(len(class0_train_data), len(class1_train_data), len(train_data))
+        
+        # Lakukan prediksi untuk tiap data test dengan currentBinaryLabel
+        predResult = predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_train_data, test_data, probClass0, probClass1)
+        break
     
-    # Contoh perhitungan supermatrix (biar mudah diliat pake variable)
-    superMatrix, sumAllCells = createSuperMatrix(test_data)
-    
-    # get total vocabulary and concept page for smoothing
-    totalVocab = len(test_data[0]["weightedAyat"].index)
-    totalConcept = len(test_data[0]["weightedAyat"].columns)
-    
-    matriksprobabilitas = calculateProbability(superMatrix, sumAllCells, totalVocab, totalConcept)
+#    # Contoh perhitungan supermatrix (biar mudah diliat pake variable)
+#    superMatrix, sumAllCells = createSuperMatrix(test_data)
+#    
+#    # get total vocabulary and concept page for smoothing
+#    totalVocab = len(test_data[0]["weightedAyat"].index)
+#    totalConcept = len(test_data[0]["weightedAyat"].columns)
+#    
+#    matriksprobabilitas = calculateProbability(superMatrix, sumAllCells, totalVocab, totalConcept)
+        
+#    print("probClass0 = ", probClass0)
+#    print("probClass1 = ", probClass1)
         
     
     
