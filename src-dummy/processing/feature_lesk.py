@@ -6,104 +6,27 @@ import pandas as pd
 import numpy as np
 import codecs
 import pickle
-import math
 import glob
 import ast
 import sys
-import re
 import os
 # == FILE AS PACKAGES ==
 sys.path.insert(1, '../preparation/')  # import func from another file in other directory
-import get_wikipedia as gw             # file preparation/get_wikipedia.py
-import credentials as creds            # file preparation/credentials.py
-import create_terms as ct              # file processing/create_terms
-import preprocess as pr                # file processing/preprocess
+import credentials as creds            # file preparation/credentials
 import lesk_tfidf as leskTfIdf         # file processing/lesk_tfidf
+import common_function as cf           # file processing/common_function
+
+
+
+'''======= SETTINGS ======='''
 # == MAIN FILE DRIVE ==
-#fileDriveName = "dummy-dataset-quran"  # "dataset-quran"
-fileDriveName = "dataset-quran"
-
-'''
-Input    : wiki file
-Output   : clean wiki file
-Problem  : remove all non word and convert doc to one line
-'''
-def cleanWikiFile(linesTxt):
-    # membuat file menjadi satu baris
-    mystr = '\t'.join([line.strip() for line in linesTxt])
-    # replace yang berlebih menjadi 1
-    mystr = " ".join(mystr.split())
-    # hapus char kecuali huruf
-    mystr = re.sub('[^A-Za-z]+',' ', mystr)
-    return mystr
+fileDriveName = "dummy-dataset-quran"
+#fileDriveName = "dataset-quran"
 
 
-'''
-Input   : path to directory wiki
-Output  : return 1 directory with one file tiap termsnya
-'''
-def mergeTermsFiles():
-    termsDirList = gw.getListOfDirs()
-    # hapus dir ke wikinya, karena masuk di list
-    termsDirList.pop(0)
-    
-    for i, termDir in enumerate(termsDirList):
-        termName = termDir[16:]
-        fileNameList = glob.glob("{}/*.txt".format(termDir))
-        with codecs.open('../../data/merge_wiki/{}.bin.txt'.format(termName), 'wb') as outfile:
-            for fname in fileNameList:
-                with codecs.open(fname, 'r', 'utf-8') as infile:
-                    lines = infile.readlines()
-                    # clean dari whitespcae hingga hanya words saja
-                    cleanTxt = cleanWikiFile(lines)
-                    # clean sampai jadi list kayak ayat alquran
-                    listCleanTxt = pr.cleaningData(cleanTxt)
-                    # save list ke file txt, biar mudah pas di read
-                    pickle.dump(listCleanTxt, outfile)
-        print("{}/{} {} : done".format(i, len(termsDirList)-1, termName))
 
 
-'''
-Input   : nama main folder buat nampung outputnya
-Output  : folder data/wiki_bin page concepts window ( mirip kayak mergeTermsFiles() )
-Problem : create folder dengan bin per pages
-'''
-def createConceptsFiles(nameMainDir = 'wiki_bin'):   
-    gw.createDir(nameMainDir, path='../../data/')
-    # list path of dirs
-    termsDirList = gw.getListOfDirs()
-    # hapus dir ke wikinya, karena masuk di list
-    termsDirList.pop(0)
-    
-    for i, termDir in enumerate(termsDirList):
-        termName = termDir[16:]
-        fileNameList = glob.glob("{}/*.txt".format(termDir))
-        # create directorynya
-        gw.createDir(termName, path= "../../data/{}/".format(nameMainDir))
-        for j, fname in enumerate(fileNameList):
-            with codecs.open('../../data/{}/{}/{}_page_{}.bin.txt'.format(nameMainDir, termName, termName, j), 'wb') as outfile:
-                with codecs.open(fname, 'r', 'utf-8') as infile:
-                    lines = infile.readlines()
-                    # clean dari whitespcae hingga hanya words saja
-                    cleanTxt = cleanWikiFile(lines)
-                    # clean sampai jadi list kayak ayat alquran
-                    listCleanTxt = pr.cleaningData(cleanTxt)
-                    # save list ke file txt, biar mudah pas di read
-                    pickle.dump(listCleanTxt, outfile)
-            print("{}/{} from {}/{} {} : done".format(j, len(fileNameList)-1, i, len(termsDirList)-1, termName))
-
-
-'''
-Input   : path to binary file of wiki page
-Output  : return type list of file binary
-'''
-def readFileBin(path = ''):
-    file = open(path, 'rb')
-    object_file = pickle.load(file)
-    return object_file
-    # file.close()
-
-
+'''============ 1. ============'''
 '''
 Input   : jumlah windowing, ayat dan target word (indexnya)
 Output  : return words berdasarkan windowsnya
@@ -134,17 +57,9 @@ def windowing(idxTarget, tokenAyat, n_window):
     return windowingWordsClean
 
 
-'''
-Input   : -
-Output  : list of terms
-Problem : ambil terms wiki di  google sheet
-'''
-def getTerms():
-    # ambil data terms dari drive
-    listTerms= ct.getListTermsFromSheet(fileName=fileDriveName, wsNameUniqueWords="wiki-unique-words")
-    return listTerms
 
 
+'''============ 2. ============'''
 '''
 Input   : -
 Output  : list concepts
@@ -165,14 +80,9 @@ def setConceptsPagesList(mainDirName = 'wiki_bin', outputFileName = 'concepts'):
     print(concepts[0].name)
 
 
-def getConcepts():
-    # buka file picklenya yang isinya itu dict concepts
-    path = '../../data/concepts.bin.txt'
-    concepts = readFileBin(path)
-    conceptsName = np.ravel([concept.name.values.tolist() for concept in concepts])
-    conceptsPath = np.ravel([concept.path.values.tolist() for concept in concepts])
-    return conceptsName, conceptsPath
 
+
+'''============ 3. ============'''
 '''
 Input   : - hasil ravel of list of tokenization definition from wordnet
 Output  : Count of overlap
@@ -195,11 +105,13 @@ def countOverlapDefinition(windowingWordsDef):
 
 
 
-''' ========== DONE Date: 21/10/2020 =========='''
+
+'''============ 4. ============'''
 '''
 Input   : insert vector target word ke matriks dataframe ayat
 Output  : matriks dataframe ayat
 Problem : -
+DONE Date: 21/10/2020
 ''' 
 def insertTargetWordVectorToDf(dfTermsConcepts, dictTargetWordVector):
     # ambil target word sembari hapus key-nya
@@ -221,11 +133,13 @@ def insertTargetWordVectorToDf(dfTermsConcepts, dictTargetWordVector):
 
 
 
-''' ========== DONE Date: 21/10/2020 =========='''
+
+'''============ 5. ============'''
 '''
 Input   : hitung concept vector untuk target word
 Output  : Vector of target terms by concepts
 Problem : -
+DONE Date: 21/10/2020
 ''' 
 def calculateTargetTermConceptVector(dfNormalizedWindowingConcepts, targetWord):
     # milai concept windows
@@ -247,11 +161,14 @@ def calculateTargetTermConceptVector(dfNormalizedWindowingConcepts, targetWord):
 
 
 
-''' ========== DONE Date: 21/10/2020 =========='''
+
+
+'''============ 6. ============'''
 '''
 Input   : - windowingWords
 Output  : Vector of terms by concepts
 Problem : - ngitungnya
+DONE Date: 21/10/2020
 ''' 
 def countOverlapsConcept(windowingWords, targetWord, countOverlapsContext):
     tf = leskTfIdf.get_tf()
@@ -275,6 +192,8 @@ def countOverlapsConcept(windowingWords, targetWord, countOverlapsContext):
 
 
 
+
+'''============ 7. ============'''
 '''
 Input   : - word
 Output  : hasil ravel of list of tokenization definition from wordnet
@@ -292,6 +211,9 @@ def tokenizeWordnetDefinition(word):
 
 
 
+
+
+'''============ 8. ============'''
 '''
 Input   : - matrix zero dengan index terms dan kolom concepts
           - windowing words
@@ -326,6 +248,8 @@ def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts, targetWord):
 
 
 
+
+'''============ 9. ============'''
 '''
 Input   : token ayat dan jumlah windowing
 Output  : matrix terms-by-concepts dari suatu ayat
@@ -336,9 +260,9 @@ Problem : - jumlah overlaps menggunakan wordNet
 def weighting(tokenAyat, n_window):
     print('- Creating DataFrame Terms Concept...')
     # definisikan concepts
-    listConcepts, _ = getConcepts()
+    listConcepts, _ = cf.getConcepts()
     # definisikan terms dengan --- function getTerms() ---
-    listTerms = getTerms()
+    listTerms = cf.getTerms()
     # inisialisasi matrix kosongnya dulu
     dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
     
@@ -366,6 +290,9 @@ def weighting(tokenAyat, n_window):
 
 
 
+
+
+'''============ 10. ============'''
 '''
 Input   : file dataset
 Output  : matrices of terms-by-concept sebanyak documents
@@ -407,11 +334,14 @@ def leskAlgorithm(n_window = 2):
 
 
 
-''' ========== DONE Date: 22/10/2020 =========='''
+
+
+'''============ 11. ============'''
 '''
 Input   : term by concept matrices
 Output  : saved model in .bin.txt
 Problem : -
+DONE Date: 22/10/2020
 ''' 
 def saveTermsByConceptMatrices(listWeightedAyat, outputFileName = 'terms_by_concept_dummy'):
     with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
@@ -419,19 +349,21 @@ def saveTermsByConceptMatrices(listWeightedAyat, outputFileName = 'terms_by_conc
 
 
 
+
+'''============ 12. ============'''
 if __name__ == '__main__':
     # for word in wn.words():
     #     print(word)
     # print(syns[0].definition())
     # print(syns)
       
-#    n_window = 2
-#    listWeightedAyat = leskAlgorithm(n_window)
-#    saveTermsByConceptMatrices(listWeightedAyat)
+    n_window = 2
+    listWeightedAyat = leskAlgorithm(n_window)
+    saveTermsByConceptMatrices(listWeightedAyat)
     
-    listConcepts, _ = getConcepts()
+#    listConcepts, listConceptsPath = cf.getConcepts()
 #    # definisikan terms dengan --- function getTerms() ---
-    listTerms = getTerms()
+#    listTerms = cf.getTerms()
 #    # inisialisasi matrix kosongnya dulu
 #    dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
     
@@ -445,7 +377,13 @@ if __name__ == '__main__':
 #    targetWordDict = calculateTargetTermConceptVector(dfCountOverlapsConcept, targetWord)
     
 #    dfTermsConceptsNew = insertTargetWordVectorToDf(dfTermsConcepts, targetWordDict)
-      
+    
+#    t = "[aba]"
+#    c = r"../../data/wiki_bin\aba\aba_page_0.bin.txt"
+#    c = c.replace('\\','')
+#    print(c)
+#    print(len(re.findall("aba", c)))
+#      
     
     '''
     # Get unique words from google sheet
@@ -462,28 +400,29 @@ if __name__ == '__main__':
     
     
     
+''' 
+REMINDER CODES
 '''
-def old_windowing(idxTarget, tokenAyat, n_window):
-    # check n_window apakan ganjil atau genap
-    # kalau genap, tambah 1 biar ganjil - dipaksakan
-    if(n_window % 2) == 0:
-        n_window += 1
-    # kalau ganjil
-    if(n_window % 2) == 1:
-        half_window = math.floor(n_window/2)
-        # 0 kalau ada minus
-        left = 0 if((idxTarget - half_window) < 0) else (idxTarget - half_window)
-        # len target kalau lebih dari length nya
-        right = (len(tokenAyat) - 1) if((idxTarget + half_window) > (len(tokenAyat) - 1)) else (idxTarget + half_window)
+# def old_windowing(idxTarget, tokenAyat, n_window):
+#     # check n_window apakan ganjil atau genap
+#     # kalau genap, tambah 1 biar ganjil - dipaksakan
+#     if(n_window % 2) == 0:
+#         n_window += 1
+#     # kalau ganjil
+#     if(n_window % 2) == 1:
+#         half_window = math.floor(n_window/2)
+#         # 0 kalau ada minus
+#         left = 0 if((idxTarget - half_window) < 0) else (idxTarget - half_window)
+#         # len target kalau lebih dari length nya
+#         right = (len(tokenAyat) - 1) if((idxTarget + half_window) > (len(tokenAyat) - 1)) else (idxTarget + half_window)
         
-        # ambil kata-kata di kiri
-        leftWords = tokenAyat[left : idxTarget]
-        # ambil kata-kata dikanan
-        rightWords = tokenAyat[idxTarget+1 : right + 1]
+#         # ambil kata-kata di kiri
+#         leftWords = tokenAyat[left : idxTarget]
+#         # ambil kata-kata dikanan
+#         rightWords = tokenAyat[idxTarget+1 : right + 1]
     
-        # gabungkan jadi satu array
-        windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
+#         # gabungkan jadi satu array
+#         windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
         
-        #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
-        return windowingWords
-'''
+#         #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
+#         return windowingWords

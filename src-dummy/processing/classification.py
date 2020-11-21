@@ -2,14 +2,13 @@
 # == ORIGINAL PACKAGES ==
 import pandas as pd
 import numpy as np
-import random
-import codecs
-import pickle
-import math
 # == FILE AS PACKAGES ==
-import feature_lesk as fl
+import common_function as cf           # file processing/common_function
 
 
+
+
+'''============ 1. ============'''
 ''' 
 ### DONE Date: 25/10/2020 ###
 Input   : dataPerClass
@@ -33,6 +32,10 @@ def createSuperMatrix(dataPerClass):
     return dfAccumulatorDataPerClass, accumulatorAllCells
 
 
+
+
+
+'''============ 2. ============'''
 ''' 
 ### DONE Date: 25/10/2020 ###
 Input   : superMatrixSomeClass, sumAllCellSomeClass, current_test_data
@@ -54,6 +57,8 @@ def updateSuperMatrix(superMatrixSomeClass, sumAllCellSomeClass, current_test_da
 
 
 
+
+'''============ 3. ============'''
 ''' 
 ### ON PROCESS Date: 25/10/2020 ###
 Input   : superMatrixClass0, sumAllCellClass0, totalVocab, totalConcept -> Pr(Mij | C)
@@ -73,6 +78,8 @@ def calculateProbability(superMatrixSomeClass, sumAllCellSomeClass, totalVocab, 
 
 
 
+
+'''============ 4. ============'''
 ''' 
 ### ON PROCESS Date: 25/10/2020 ###
 Input   : probClass0, probabilityMatrixClass0
@@ -97,6 +104,9 @@ def calculateFinalProbability(probClass, probabilityMatrixClass):
     return finalProbabiity
 
 
+
+
+'''============ 5. ============'''
 ''' 
 ### ON PROCESS Date: 25/10/2020 ###
 Input   : train data & test data
@@ -148,6 +158,9 @@ def calculateSNB(
 
 
 
+
+
+'''============ 6. ============'''
 ''' 
 ### DONE Date: 25/10/2020 ###
 Input   : train data & test data
@@ -192,6 +205,9 @@ def predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_tr
 
 
 
+
+
+'''============ 7. ============'''
 ''' 
 ### DONE Date: 25/10/2020 ###
 Input   : class0_train_data, class1_train_data, number_train_data
@@ -208,6 +224,9 @@ def calculateClassProbability(number_class0_train_data, number_class1_train_data
 
 
 
+
+
+'''============ 8. ============'''
 ''' 
 ### DONE Date: 25/10/2020 ###
 Input   : train data
@@ -227,6 +246,9 @@ def devideTrainDataByClass(train_data, currentBinaryLabel):
 
 
 
+
+
+'''============ 9. ============'''
 ''' 
 ### DONE Date: 22/10/2020 ###
 Input   : listWeightedAyat
@@ -259,10 +281,12 @@ Problem : -
 
 
 
+
+'''============ 10. ============'''
 if __name__ == '__main__':
     #listWeightedAyat = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
     # load data terms-by-concept matriks dari file bin
-    listWeightedAyat = fl.readFileBin(path='../../data/terms_by_concept_dummy.bin.txt')
+    listWeightedAyat = cf.readFileBin(path='../../data/terms_by_concept_dummy.bin.txt')
     # panggill fungsi main / entar pake ini
     #mainClassification(listWeightedAyat)
     train_data, test_data = splitData(listWeightedAyat)
@@ -271,7 +295,7 @@ if __name__ == '__main__':
     # inisialisasi dict untuk prediction result
     predResult = dict()
 
-    '''
+#    '''
     # ALTERNATIF 1
     for currentBinaryLabel in labelsName:
         # kelompokkan data train berdasarkan kelasnya
@@ -283,8 +307,9 @@ if __name__ == '__main__':
         # Lakukan prediksi untuk tiap data test dengan currentBinaryLabel
         predResult = predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_train_data, test_data, probClass0, probClass1)
         #break
-    '''
+#    '''
         
+    '''
     # ALTERNATFIF 2
     currentBinaryLabel = 2
     # kelompokkan data train berdasarkan kelasnya
@@ -295,6 +320,7 @@ if __name__ == '__main__':
     
     # Lakukan prediksi untuk tiap data test dengan currentBinaryLabel
     predResult = predictDataTest(predResult, currentBinaryLabel, class0_train_data, class1_train_data, test_data, probClass0, probClass1)
+    '''
     
 #    # Contoh perhitungan supermatrix (biar mudah diliat pake variable)
 #    superMatrix, sumAllCells = createSuperMatrix(test_data)
