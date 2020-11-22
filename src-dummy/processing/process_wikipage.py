@@ -8,6 +8,8 @@ import glob
 import sys
 import codecs
 import pickle
+import os
+import pandas as pd
 # == FILE AS PACKAGES ==
 sys.path.insert(1, '../preparation/')  # import func from another file in other directory
 import get_wikipedia as gw             # file preparation/get_wikipedia.py
@@ -97,7 +99,33 @@ def createConceptsFiles(nameMainDir = 'wiki_bin'):
 
 
 
+
+
 '''============ 4. ============'''
+'''
+Input   : -
+Output  : list concepts
+Problem : ambil list nama file dari wikipedia data/wiki_bin
+'''
+def setConceptsPagesList(mainDirName = 'wiki_bin', outputFileName = 'concepts'):
+    concepts = []
+    # dir buat ngambil nama pages setiap concepts-nya
+    dirNameList = glob.glob("../../data/{}/*".format(mainDirName))
+    for dirName in dirNameList:
+        for file in os.listdir(dirName):
+            if file.endswith(".bin.txt"):
+                concept = pd.DataFrame({'path' : [os.path.join(dirName, file)],'name' : [file[:-8]] })
+                concepts.append(concept)
+    with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
+        pickle.dump(concepts, outfile)
+    print(concepts)
+    print(concepts[0].name)
+
+
+
+
+
+'''============ 5. ============'''
 if __name__ == '__main__':
     print(0)
 

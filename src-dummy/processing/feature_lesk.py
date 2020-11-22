@@ -6,15 +6,32 @@ import pandas as pd
 import numpy as np
 import codecs
 import pickle
-import glob
 import ast
 import sys
-import os
 # == FILE AS PACKAGES ==
 sys.path.insert(1, '../preparation/')  # import func from another file in other directory
 import credentials as creds            # file preparation/credentials
 import lesk_tfidf as leskTfIdf         # file processing/lesk_tfidf
 import common_function as cf           # file processing/common_function
+
+
+# STRUKTUR FUNCTION DI FILE INI
+'''
+- func-leskAlgorithm
+    |
+    - func-weighting
+        |
+        - (inisiasi dataframe term-by-concept)
+        - func-windowing
+        - func-termByConceptMatrixWeighted
+            |
+            - func-tokenizeWordnetDefinition
+            - func-countOverlapDefinition
+            - func-countOverlapsConcept
+            - func-calculateTargetTermConceptVector
+            - func-insertTargetWordVectorToDf
+'''
+    
 
 
 
@@ -26,87 +43,8 @@ fileDriveName = "dummy-dataset-quran"
 
 
 
+
 '''============ 1. ============'''
-'''
-Input   : jumlah windowing, ayat dan target word (indexnya)
-Output  : return words berdasarkan windowsnya
-Problem : - untuk data yang kurang dari jumlah window yang saat itu digunakan ? return semuanya
-          - cek dengan print dokumen dummy
-          - gimana kalo posisi target ada di (awal, tengah, ujung)
-'''
-def windowing(idxTarget, tokenAyat, n_window):
-    # 0 kalau ada minus
-    left = 0 if((idxTarget - n_window) < 0) else (idxTarget - n_window)
-    # len target kalau lebih dari length nya
-    right = (len(tokenAyat) - 1) if((idxTarget + n_window) > (len(tokenAyat) - 1)) else (idxTarget + n_window)
-    
-    # ambil kata-kata di kiri
-    leftWords = tokenAyat[left : idxTarget]
-    # ambil kata-kata dikanan
-    rightWords = tokenAyat[idxTarget+1 : right + 1]
-
-    # gabungkan jadi satu array
-    windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
-    
-    # ========= PERUBAHAN PENTING NIH ===========
-    # delete word yang duplikat ketika beada lam satu window
-    # kasusnya ayat ke-5 word "thee" 
-    windowingWordsClean = np.unique(np.array(windowingWords))
-    
-    #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
-    return windowingWordsClean
-
-
-
-
-'''============ 2. ============'''
-'''
-Input   : -
-Output  : list concepts
-Problem : ambil list nama file dari wikipedia data/wiki_bin
-'''
-def setConceptsPagesList(mainDirName = 'wiki_bin', outputFileName = 'concepts'):
-    concepts = []
-    # dir buat ngambil nama pages setiap concepts-nya
-    dirNameList = glob.glob("../../data/{}/*".format(mainDirName))
-    for dirName in dirNameList:
-        for file in os.listdir(dirName):
-            if file.endswith(".bin.txt"):
-                concept = pd.DataFrame({'path' : [os.path.join(dirName, file)],'name' : [file[:-8]] })
-                concepts.append(concept)
-    with codecs.open("../../data/{}.bin.txt".format(outputFileName), 'wb') as outfile:
-        pickle.dump(concepts, outfile)
-    print(concepts)
-    print(concepts[0].name)
-
-
-
-
-'''============ 3. ============'''
-'''
-Input   : - hasil ravel of list of tokenization definition from wordnet
-Output  : Count of overlap
-Problem : - cara ngitungnya gimana
-''' 
-def countOverlapDefinition(windowingWordsDef):
-    ravelWindowingWordsDef = [item for sublist in windowingWordsDef for item in sublist]
-    uniqueWordDef = list(set(ravelWindowingWordsDef))
-    count = 0
-    for uniqueWord in uniqueWordDef:
-        checkWord = True
-        for wordDef in windowingWordsDef:
-            if uniqueWord not in wordDef:
-                checkWord = False
-                break
-        if checkWord:
-            count += 1
-            # print(uniqueWord)
-    return count
-
-
-
-
-'''============ 4. ============'''
 '''
 Input   : insert vector target word ke matriks dataframe ayat
 Output  : matriks dataframe ayat
@@ -130,11 +68,12 @@ def insertTargetWordVectorToDf(dfTermsConcepts, dictTargetWordVector):
         #print('INSERTED : ', i, ' / ', dfTermsConcepts.loc[targetWord, pageName])
     
     return dfTermsConcepts
-
-
-
-
-'''============ 5. ============'''
+                #
+                #
+                #
+                #
+                #
+'''============ 2. ============'''
 '''
 Input   : hitung concept vector untuk target word
 Output  : Vector of target terms by concepts
@@ -158,12 +97,12 @@ def calculateTargetTermConceptVector(dfNormalizedWindowingConcepts, targetWord):
         dictTargetWordVector[columnName] = avgValueOfTargetWord
             
     return dictTargetWordVector
-
-
-
-
-
-'''============ 6. ============'''
+                #
+                #
+                #
+                #
+                #
+'''============ 3. ============ @PERBAIKI, yang ditambah cuma target wordnya aja'''
 '''
 Input   : - windowingWords
 Output  : Vector of terms by concepts
@@ -189,11 +128,37 @@ def countOverlapsConcept(windowingWords, targetWord, countOverlapsContext):
         #pickle.dump(dfNormalizedWindowingConcepts, outfile) 
                 
     return dfNormalizedWindowingConcepts
-
-
-
-
-'''============ 7. ============'''
+                #
+                #
+                #
+                #
+                #
+'''============ 4. ============ @Perbaiki Perhitungan Overlaps Pada WordNet-nya (liat paper rujukan)'''
+'''
+Input   : - hasil ravel of list of tokenization definition from wordnet
+Output  : Count of overlap
+Problem : - cara ngitungnya gimana
+''' 
+def countOverlapDefinition(windowingWordsDef):
+    ravelWindowingWordsDef = [item for sublist in windowingWordsDef for item in sublist]
+    uniqueWordDef = list(set(ravelWindowingWordsDef))
+    count = 0
+    for uniqueWord in uniqueWordDef:
+        checkWord = True
+        for wordDef in windowingWordsDef:
+            if uniqueWord not in wordDef:
+                checkWord = False
+                break
+        if checkWord:
+            count += 1
+            # print(uniqueWord)
+    return count
+                #
+                #
+                #
+                #
+                #
+'''============ 5. ============ @PERBAIKI, Kita Harus tau mana definisi untuk tiap kata di windowingnya - simpen di dict'''
 '''
 Input   : - word
 Output  : hasil ravel of list of tokenization definition from wordnet
@@ -212,8 +177,7 @@ def tokenizeWordnetDefinition(word):
 
 
 
-
-'''============ 8. ============'''
+'''============ 6. ============'''
 '''
 Input   : - matrix zero dengan index terms dan kolom concepts
           - windowing words
@@ -227,8 +191,11 @@ def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts, targetWord):
     # Count Overlaps Context
     windowingWordsDef = []
     for w in windowingWords:
+        # tokenizedDef harusnya bentuknya dict, nyimpe wordnya apa, dan token definisinya
         tokenizedDef = tokenizeWordnetDefinition(w)
         windowingWordsDef.append(tokenizedDef)
+    
+    # Count Overlaps WordNet
     countOverlapsContext = countOverlapDefinition(windowingWordsDef)
     
     # Count Overlaps Concept
@@ -245,11 +212,45 @@ def termByConceptMatrixWeighted(windowingWords, dfTermsConcepts, targetWord):
     # Main Weighting
     # WordNet
     return dfTermsConcepts
+                #
+                #
+                #
+                #
+'''============ 7. ============'''
+'''
+Input   : jumlah windowing, ayat dan target word (indexnya)
+Output  : return words berdasarkan windowsnya
+Problem : - untuk data yang kurang dari jumlah window yang saat itu digunakan ? return semuanya
+          - cek dengan print dokumen dummy
+          - gimana kalo posisi target ada di (awal, tengah, ujung)
+'''
+def windowing(idxTarget, tokenAyat, n_window):
+    # 0 kalau ada minus
+    left = 0 if((idxTarget - n_window) < 0) else (idxTarget - n_window)
+    # len target kalau lebih dari length nya
+    right = (len(tokenAyat) - 1) if((idxTarget + n_window) > (len(tokenAyat) - 1)) else (idxTarget + n_window)
+    
+    # ambil kata-kata di kiri
+    leftWords = tokenAyat[left : idxTarget]
+    # ambil kata-kata dikanan
+    rightWords = tokenAyat[idxTarget+1 : right + 1]
+
+    # gabungkan jadi satu array
+    windowingWords = [tokenAyat[idxTarget]] + leftWords + rightWords
+    
+    # ========= PERUBAHAN PENTING NIH ===========
+    # delete word yang duplikat ketika berada dalam satu window
+    # kasusnya ayat ke-5 word "thee" 
+    windowingWordsClean = np.unique(np.array(windowingWords))
+    
+    #print('{} - {} - target : {} '.format(leftWords, rightWords, tokenAyat[idxTarget]))
+    return windowingWordsClean
 
 
 
 
-'''============ 9. ============'''
+
+'''============ 8. ============'''
 '''
 Input   : token ayat dan jumlah windowing
 Output  : matrix terms-by-concepts dari suatu ayat
@@ -263,7 +264,7 @@ def weighting(tokenAyat, n_window):
     listConcepts, _ = cf.getConcepts()
     # definisikan terms dengan --- function getTerms() ---
     listTerms = cf.getTerms()
-    # inisialisasi matrix kosongnya dulu
+    # inisialisasi matrix kosongnya dulu untuk matriks terms-by-concept
     dfTermsConcepts = pd.DataFrame(0, index=listTerms, columns=listConcepts)
     
     #print(dfTermsConcepts)
@@ -292,7 +293,7 @@ def weighting(tokenAyat, n_window):
 
 
 
-'''============ 10. ============'''
+'''============ 9. ============'''
 '''
 Input   : file dataset
 Output  : matrices of terms-by-concept sebanyak documents
@@ -336,7 +337,7 @@ def leskAlgorithm(n_window = 2):
 
 
 
-'''============ 11. ============'''
+'''============ 10. ============'''
 '''
 Input   : term by concept matrices
 Output  : saved model in .bin.txt
@@ -350,7 +351,7 @@ def saveTermsByConceptMatrices(listWeightedAyat, outputFileName = 'terms_by_conc
 
 
 
-'''============ 12. ============'''
+'''============ 11. ============'''
 if __name__ == '__main__':
     # for word in wn.words():
     #     print(word)
