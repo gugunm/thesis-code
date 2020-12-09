@@ -175,6 +175,7 @@ if __name__ == '__main__':
 #    fileName = "dataset-quran"
     
     ### Proses TF
+    tf()
     '''
     tf_dummy()
     tf = get_tf()

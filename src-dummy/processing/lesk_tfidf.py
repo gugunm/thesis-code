@@ -119,13 +119,16 @@ def tf(outputPath = TfResultPath):
     # inisialisasi matrix kosongnya dulu
     dfTermsFreq = pd.DataFrame(0, index=listTerms, columns=listConceptsName)
     
+    countPage = 0
     for idxConceptPath, conceptPath in enumerate(listConceptsPath):
+        countPage += 1
+        # print(conceptPath[20:])
         fileConcept = cf.readFileBin(conceptPath)
         for idxTerm, term in enumerate(listTerms):
             freq = fileConcept.count(term)
             dfTermsFreq.loc[term, listConceptsName[idxConceptPath]] = freq
-            print('{}/{} : {}[{}] \u2713'.format(idxTerm, len(listTerms)-1, term, dfTermsFreq.loc[term, listConceptsName[idxConceptPath]]))
-    
+            # print('{}/{} : {}[{}] \u2713'.format(countPage, len(listConceptsPath), term, dfTermsFreq.loc[term, listConceptsName[idxConceptPath]]))
+        print('{}/{} \u2713'.format(countPage, len(listConceptsPath)))
     with codecs.open(outputPath, 'wb') as outfile:
         pickle.dump(dfTermsFreq, outfile) 
     
@@ -147,19 +150,27 @@ def df(outputPath = DfResultPath):
     print(len(listTerms))
     # definisikan concepts
     listConceptsName , listConceptsPath = cf.getConcepts()
+    
+    print(len(listConceptsPath))
+    
+    print("check")
         
     # inisialisasi matrix kosongnya dulu
     dfDocFreq = pd.DataFrame(0, index=listTerms, columns=['docfreq'])
     
+    print("check 2")
+    
     sizeDoc = len(listConceptsPath)
     for idxTerm, term in enumerate(listTerms):
-        print("Idx Term : {}/{}".format(idxTerm, len(listTerms)))
+        # print("Idx Term : {}/{}".format(idxTerm, len(listTerms)))
         dfOfTerm = 0
         for idxConceptPath, conceptPath in enumerate(listConceptsPath):
             fileConcept = cf.readFileBin(conceptPath)
             freq = fileConcept.count(term)
             if freq >= 1:
                 dfOfTerm += 1
+        if dfOfTerm == 0:
+            dfOfTerm += 1
         dfDocFreq.loc[term, 'docfreq'] = math.log10(sizeDoc/dfOfTerm) 
         print('{}/{} : {}[{}] \u2713'.format(idxTerm, len(listTerms)-1, term, dfOfTerm))
     
@@ -239,6 +250,11 @@ def main_actual():
 
 '''=========== 8. ============='''
 if __name__ == '__main__':
+    # tf()
+    # df()
+    tf_result = get_tf(TfResultPath)
+    df_result = get_df(DfResultPath)
+    # print(tf_result)
     ### get creds
 #    gClient = creds.credentialGoogle()
     ### file sheet name

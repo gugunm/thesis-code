@@ -7,6 +7,7 @@ import gspread_dataframe as gd
 import sys
 # import func from another file in other directory
 sys.path.insert(1, '../preparation/')
+import credentials as creds                      # credential for GDrive and GSheet
 
 
 

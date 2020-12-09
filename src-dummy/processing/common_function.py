@@ -11,8 +11,8 @@ import create_terms as ct              # file processing/create_terms
 
 '''======= SETTINGS ======='''
 # == MAIN FILE DRIVE ==
-fileDriveName = "dummy-dataset-quran"
-#fileDriveName = "dataset-quran"
+# fileDriveName = "dummy-dataset-quran"
+fileDriveName = "dataset-quran"
 
 
 
@@ -45,28 +45,28 @@ def getTerms():
 
 
 '''============ 3. ============'''
-#def getConcepts(): # for real data
-#    # buka file picklenya yang isinya itu dict concepts
-#    path = '../../data/concepts.bin.txt'
-#    concepts = readFileBin(path)
-#    conceptsName = np.ravel([concept.name.values.tolist() for concept in concepts])
-#    conceptsPath = np.ravel([concept.path.values.tolist() for concept in concepts])
-#    return conceptsName, conceptsPath
-
-def getConcepts(): #for dummy data
+def getConcepts(): # for real data
     # buka file picklenya yang isinya itu dict concepts
     path = '../../data/concepts.bin.txt'
     concepts = readFileBin(path)
-    conceptsName = np.ravel([concept.name.values.tolist() for concept in concepts])  
+    conceptsName = np.ravel([concept.name.values.tolist() for concept in concepts])
     conceptsPath = np.ravel([concept.path.values.tolist() for concept in concepts])
+    return conceptsName, conceptsPath
+
+# def getConcepts(): #for dummy data
+#     # buka file picklenya yang isinya itu dict concepts
+#     path = '../../data/concepts.bin.txt'
+#     concepts = readFileBin(path)
+#     conceptsName = np.ravel([concept.name.values.tolist() for concept in concepts])  
+#     conceptsPath = np.ravel([concept.path.values.tolist() for concept in concepts])
     
-    dummyConceptName = []
-    dummyConceptPath = []
-    terms = getTerms()
+#     dummyConceptName = []
+#     dummyConceptPath = []
+#     terms = getTerms()
         
-    for i, c in enumerate(conceptsName):
-        if re.split("\_", c)[0] in terms:
-            dummyConceptName.append(c)
-            dummyConceptPath.append(conceptsPath[i])
+#     for i, c in enumerate(conceptsName):
+#         if re.split("\_", c)[0] in terms:
+#             dummyConceptName.append(c)
+#             dummyConceptPath.append(conceptsPath[i])
     
-    return dummyConceptName, dummyConceptPath
+#     return dummyConceptName, dummyConceptPath

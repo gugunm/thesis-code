@@ -1,1 +1,4 @@
 data/
+jupyter-notebook/assets
+jupyter-notebook/dataset
+jupyter-notebook/model
